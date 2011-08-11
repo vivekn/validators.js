@@ -1,0 +1,42 @@
+<html>
+    <head>
+		<style>
+			.error {font-size: 80%; color: red;}
+			.container {width: 960px;	margin: auto; padding-top: 200px;}
+			.input { margin: 5px;}
+		</style>        
+    </head>
+
+    <body class="">
+       <div class="container">
+       		<center>
+	             <form>
+	             	<table width="400px">
+	               <tr> <td>First name</td> <td><input type="text" id = "first"/></td></tr>
+	               <tr> <td>Last name</td> <td>  <input type="text" id = "last"/></td> </tr>
+	               <tr> <td>Email address</td> <td> <input type="text" id = "email"/></td> </tr>
+	               <tr> <td>Password</td> <td> <input type="password" id = "pass"/></td> </tr>
+	               <tr> <td> <input type="button" value="Submit" onclick="validateSubmit()"> </input> </td></tr>
+						</table>	             
+	             </form>
+            </center>
+        </div>
+       </div> 
+      
+      <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+      <script src="validators.js"></script>
+      
+      <script type="text/javascript" >
+			function validateSubmit() {
+				Validators({
+					"input": new EmptyValidator(),
+					"#email": new EmailValidator("Please enter a valid email address"),
+					"#pass": new LengthValidator(6, "The password should be atleast 6 characters")
+					}
+				, function () {
+					alert("Form validated, now sending data ...");
+					});	
+			}			
+		</script>
+    </body>
+</html>
