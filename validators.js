@@ -108,6 +108,7 @@
         message = "This field can't be empty";
       }
       EmptyValidator.__super__.constructor.call(this, 1, message);
+      this.cssClass = "emptyErr";
     }
     return EmptyValidator;
   })();
@@ -116,7 +117,7 @@
     function RegexValidator(cssClass, message, regex) {
       var check;
       if (cssClass == null) {
-        cssClass = "valErr";
+        cssClass = "regexErr";
       }
       check = function(val) {
         return val.match(regex !== null);
@@ -131,7 +132,7 @@
       if (message == null) {
         message = "Please enter a valid email address";
       }
-      EmailValidator.__super__.constructor.call(this, "valErr", message, /.+@.+\..+/);
+      EmailValidator.__super__.constructor.call(this, "emailErr", message, /.+@.+\..+/);
     }
     return EmailValidator;
   })();
