@@ -13,11 +13,15 @@ class Validator
     clearErrors: ->
         $('.' + @cssClass).html('')
 
+    execute: (callback) ->
+        if @validate()
+            callback()
+
 class jValidator extends Validator
     constructor: (cssClass, message, @condition) ->
         super(cssClass, message)
 
-    validate: (selector, callback = null) ->
+    validate: (selector) ->
         #selector is any valid css/xpath selector
         jqObj = $(selector)
         @clearErrors()
@@ -26,8 +30,7 @@ class jValidator extends Validator
             if eval(@condition)
                 $(this).after @getDiv()
                 flag = false
-        if flag and callback
-            callback()
+        return flag
 
 class LengthValidator extends jValidator
     constructor: (min_length, message) ->
@@ -43,11 +46,21 @@ class PassValidator extends Validator
         [f1, f2] = [$("##{field1}"), $("##{field2}")]
         state = f1.val() == f2.val()
 
-        if state and callback
-            callback()
-
-        else if (not state)
+        if not state
             f2.after @getDiv()
+
+        return state
+
+chain_validators = (mapping, callback) ->
+    state = on
+    for key of mapping
+        if not mapping[key].validate()
+            state = off
+
+    if state
+        callback()
+
+        
 
 ###
 Export to global name_space

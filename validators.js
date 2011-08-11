@@ -3,7 +3,7 @@
   AJAX/jQuery based validator library.
   License: BSD
   Author: Vivek Narayanan (mail@vivekn.co.cc)
-  */  var EmptyValidator, LengthValidator, PassValidator, Validator, classes, exp, jValidator;
+  */  var EmptyValidator, LengthValidator, PassValidator, Validator, chain_validators, classes, exp, jValidator;
   var __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) {
     for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; }
     function ctor() { this.constructor = child; }
@@ -23,6 +23,11 @@
     Validator.prototype.clearErrors = function() {
       return $('.' + this.cssClass).html('');
     };
+    Validator.prototype.execute = function(callback) {
+      if (this.validate()) {
+        return callback();
+      }
+    };
     return Validator;
   })();
   jValidator = (function() {
@@ -31,11 +36,8 @@
       this.condition = condition;
       jValidator.__super__.constructor.call(this, cssClass, message);
     }
-    jValidator.prototype.validate = function(selector, callback) {
+    jValidator.prototype.validate = function(selector) {
       var flag, jqObj;
-      if (callback == null) {
-        callback = null;
-      }
       jqObj = $(selector);
       this.clearErrors();
       flag = true;
@@ -45,9 +47,7 @@
           return flag = false;
         }
       });
-      if (flag && callback) {
-        return callback();
-      }
+      return flag;
     };
     return jValidator;
   })();
@@ -74,14 +74,25 @@
       this.clearErrors();
       _ref = [$("#" + field1), $("#" + field2)], f1 = _ref[0], f2 = _ref[1];
       state = f1.val() === f2.val();
-      if (state && callback) {
-        return callback();
-      } else if (!state) {
-        return f2.after(this.getDiv());
+      if (!state) {
+        f2.after(this.getDiv());
       }
+      return state;
     };
     return PassValidator;
   })();
+  chain_validators = function(mapping, callback) {
+    var key, state;
+    state = true;
+    for (key in mapping) {
+      if (!mapping[key].validate()) {
+        state = false;
+      }
+    }
+    if (state) {
+      return callback();
+    }
+  };
   /*
   Export to global name_space
   */
