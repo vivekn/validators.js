@@ -6,7 +6,7 @@ Author: Vivek Narayanan (mail@vivekn.co.cc)
 
 class Validator
     constructor: (@cssClass, @message) ->
-        # @condition is a string object containing the coffescript/javascript code
+
     getDiv: ->
         "<div class='error #{ @cssClass }'>#{ @message }</div>"
 
