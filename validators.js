@@ -60,7 +60,7 @@
     }
     return LengthValidator;
   })();
-  EmptyValidator = LengthValidator(1, "This field can't be empty");
+  EmptyValidator = new LengthValidator(1, "This field can't be empty");
   PassValidator = (function() {
     function PassValidator() {
       PassValidator.__super__.constructor.apply(this, arguments);

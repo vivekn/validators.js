@@ -34,7 +34,7 @@ class LengthValidator extends jValidator
         condition = "$(this).val().length < #{min_length}"
         super "lengthVal", message, condition
 
-EmptyValidator = LengthValidator(1, "This field can't be empty")
+EmptyValidator = new LengthValidator 1, "This field can't be empty"
 
 class PassValidator extends Validator
     # Checks if two passwords match
