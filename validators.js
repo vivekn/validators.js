@@ -3,8 +3,8 @@
   AJAX/jQuery based validator library.
   License: BSD
   Author: Vivek Narayanan (mail@vivekn.co.cc)
-  */  var EmailValidator, EmptyValidator, LengthValidator, PassValidator, RegexValidator, Validator, Validators, ValueValidator, classes, equality, exp, getSelector, jValidator, map;
-  var __slice = Array.prototype.slice, __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) {
+  */  var EmailValidator, EmptyValidator, LengthValidator, PassValidator, RegexValidator, Validator, Validators, ValueValidator, classes, equality, exp, getSelector, map;
+  var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; }, __slice = Array.prototype.slice, __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) {
     for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; }
     function ctor() { this.constructor = child; }
     ctor.prototype = parent.prototype;
@@ -16,9 +16,11 @@
     function Validator(cssClass, message) {
       this.cssClass = cssClass;
       this.message = message;
+      this.clearErrors = __bind(this.clearErrors, this);;
+      this.getDiv = __bind(this.getDiv, this);;
     }
     Validator.prototype.getDiv = function() {
-      return "<div class='error " + this.cssClass + "'>" + this.message + "</div>";
+      return "<span class='error " + this.cssClass + "'>" + this.message + "</span>";
     };
     Validator.prototype.clearErrors = function() {
       return $('.' + this.cssClass).html('');
@@ -32,37 +34,6 @@
     };
     return Validator;
   })();
-  jValidator = (function() {
-    __extends(jValidator, Validator);
-    function jValidator(cssClass, message, condition) {
-      this.condition = condition;
-      jValidator.__super__.constructor.call(this, cssClass, message);
-    }
-    jValidator.prototype.validate = function(selector) {
-      var flag, jqObj;
-      jqObj = getSelector(selector);
-      this.clearErrors();
-      flag = true;
-      jqObj.each(function() {
-        if (eval(this.condition)) {
-          $(this).after(this.getDiv());
-          return flag = false;
-        }
-      });
-      return flag;
-    };
-    return jValidator;
-  })();
-  LengthValidator = (function() {
-    __extends(LengthValidator, jValidator);
-    function LengthValidator(min_length, message) {
-      var condition;
-      condition = "$(this).val().length < " + min_length;
-      LengthValidator.__super__.constructor.call(this, "lengthErr", message, condition);
-    }
-    return LengthValidator;
-  })();
-  EmptyValidator = new LengthValidator(1, "This field can't be empty");
   PassValidator = (function() {
     __extends(PassValidator, Validator);
     function PassValidator(cssClass, message) {
@@ -72,6 +43,7 @@
       if (message == null) {
         message = "The passwords don't match";
       }
+      this.validate = __bind(this.validate, this);;
       PassValidator.__super__.constructor.call(this, cssClass, message);
     }
     PassValidator.prototype.validate = function() {
@@ -81,7 +53,7 @@
       _ref = map(getSelector, selectors.slice(0, 1)), f1 = _ref[0], f2 = _ref[1];
       state = f1.val() === f2.val();
       if (!state) {
-        f2.after(this.getDiv());
+        f2.parent().append(this.getDiv());
       }
       return state;
     };
@@ -93,22 +65,51 @@
       if (cssClass == null) {
         cssClass = "valErr";
       }
+      this.validate = __bind(this.validate, this);;
       this.checkFunction = checkFunction;
       ValueValidator.__super__.constructor.call(this, cssClass, message);
     }
     ValueValidator.prototype.validate = function(selector) {
-      var flag, jqObj;
+      var cf, flag, gd, jqObj;
+      this.clearErrors();
       jqObj = getSelector(selector);
       flag = true;
+      /*
+      Due to the prototypal nature of 'this', 'this' in the jQuery each loop would refer to a DOM element
+      instead of the class. To overcome that limitation, cf and gd reference checkFunction and getDiv methods of the class
+      */
+      cf = this.checkFunction;
+      gd = this.getDiv();
       jqObj.each(function() {
-        if (this.checkFunction($(this).val())) {
-          $(this).after(this.getDiv());
+        if (!cf($(this).val())) {
+          $(this).parent().append(gd);
           return flag = false;
         }
       });
       return flag;
     };
     return ValueValidator;
+  })();
+  LengthValidator = (function() {
+    __extends(LengthValidator, ValueValidator);
+    function LengthValidator(min_length, message) {
+      var check;
+      check = function(val) {
+        return val.length >= min_length;
+      };
+      LengthValidator.__super__.constructor.call(this, "lenErr", message, check);
+    }
+    return LengthValidator;
+  })();
+  EmptyValidator = (function() {
+    __extends(EmptyValidator, LengthValidator);
+    function EmptyValidator(message) {
+      if (message == null) {
+        message = "This field can't be empty";
+      }
+      EmptyValidator.__super__.constructor.call(this, 1, message);
+    }
+    return EmptyValidator;
   })();
   RegexValidator = (function() {
     __extends(RegexValidator, ValueValidator);
@@ -127,16 +128,16 @@
   EmailValidator = (function() {
     __extends(EmailValidator, RegexValidator);
     function EmailValidator(message) {
-      var regex;
       if (message == null) {
         message = "Please enter a valid email address";
       }
-      EmailValidator.__super__.constructor.call(this, message = message, regex = /.+@.+\..+/);
+      EmailValidator.__super__.constructor.call(this, "valErr", message, /.+@.+\..+/);
     }
     return EmailValidator;
   })();
   Validators = function(mapping, callback) {
     var key, selectors, state;
+    $('.error').html('');
     state = true;
     for (key in mapping) {
       selectors = key.split(',');
@@ -179,7 +180,6 @@
   */
   classes = {
     Validator: Validator,
-    jValidator: jValidator,
     LengthValidator: LengthValidator,
     EmptyValidator: EmptyValidator,
     PassValidator: PassValidator,

@@ -7,86 +7,80 @@ Author: Vivek Narayanan (mail@vivekn.co.cc)
 class Validator
     constructor: (@cssClass, @message) ->
 
-    getDiv: ->
-        "<div class='error #{ @cssClass }'>#{ @message }</div>"
+    getDiv: =>
+        "<span class='error #{ @cssClass }'>#{ @message }</span>"
 
-    clearErrors: ->
+    clearErrors: =>
         $('.' + @cssClass).html('')
 
     execute: (selectors..., callback) ->
         if @validate()
             callback(selectors...)
 
-
-class jValidator extends Validator
-    constructor: (cssClass, message, @condition) ->
-        super(cssClass, message)
-
-    validate: (selector) ->
-        #selector is any valid css/xpath selector
-        jqObj = getSelector selector
-        @clearErrors()
-        flag = true
-        jqObj.each ->
-            if eval(@condition)
-                $(this).after @getDiv()
-                flag = false
-        return flag
-
-
-class LengthValidator extends jValidator
-    constructor: (min_length, message) ->
-        condition = "$(this).val().length < #{min_length}"
-        super "lengthErr", message, condition
-
-EmptyValidator = new LengthValidator 1, "This field can't be empty"
-
-
 class PassValidator extends Validator
     # Checks if two passwords match
     constructor: (cssClass = "passwordErr", message = "The passwords don't match") ->
         super cssClass, message
 
-    validate: (selectors...) ->
+    validate: (selectors...) =>
         @clearErrors()
         [f1, f2] = map(getSelector, selectors[0...1])
         state = f1.val() == f2.val()
 
         if not state
-            f2.after @getDiv()
+            f2.parent().append @getDiv()
 
         return state
 
 
 class ValueValidator extends Validator
-    constructor: (cssClass = "valErr", message, @checkFunction) ->
+    constructor: (cssClass = "valErr", message, checkFunction) ->
+        @checkFunction = checkFunction
         super cssClass, message
 
-    validate: (selector) ->
+    validate: (selector) =>
+        @clearErrors()
         jqObj = getSelector selector
         flag = true
+        ###
+        Due to the prototypal nature of 'this', 'this' in the jQuery each loop would refer to a DOM element
+        instead of the class. To overcome that limitation, cf and gd reference checkFunction and getDiv methods of the class 
+        ###
+        cf = @checkFunction
+        gd = @getDiv()
         jqObj.each ->
-            if @checkFunction $(this).val()
-                $(this).after @getDiv()
+            if not cf $(this).val()
+                $(this).parent().append gd
                 flag = false
         return flag
 
+class LengthValidator extends ValueValidator
+    constructor: (min_length, message) ->
+        check = (val) -> val.length >= min_length 
+        super "lenErr", message, check
+    
+class EmptyValidator extends LengthValidator
+    constructor: (message = "This field can't be empty") ->
+        super 1, message
+        @cssClass = "emptyErr"
 
 class RegexValidator extends ValueValidator
-    constructor: (cssClass = "valErr", message, regex) ->
+    constructor: (cssClass = "regexErr", message, regex) ->
         check = (val) -> val.match regex != null
         super cssClass, message, check
         
 class EmailValidator extends RegexValidator
     constructor: (message = "Please enter a valid email address") ->
-        super(message = message, regex = /.+@.+\..+/) 
+        super "emailErr", message, /.+@.+\..+/
 
 
 #Chain the results of multiple validiators and executing if all the validations have passed.
 Validators = (mapping, callback) ->
+    $('.error').html('')
     state = on
     for key of mapping
         selectors = key.split(',')
+
         if not mapping[key].validate.apply(null,selectors)
             state = off
 
@@ -117,7 +111,7 @@ getSelector = (selector) -> $(selector)
 ###
 Export to global name_space
 ###
-classes = { Validator, jValidator, LengthValidator, EmptyValidator, PassValidator, Validators, ValueValidator, EmailValidator, RegexValidator }
+classes = { Validator, LengthValidator, EmptyValidator, PassValidator, Validators, ValueValidator, EmailValidator, RegexValidator }
 for exp of classes
     window[exp] = classes[exp]
 
