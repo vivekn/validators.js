@@ -120,7 +120,7 @@
         cssClass = "regexErr";
       }
       check = function(val) {
-        return val.match(regex !== null);
+        return val.match(regex) !== null;
       };
       RegexValidator.__super__.constructor.call(this, cssClass, message, check);
     }
@@ -146,9 +146,10 @@
         state = false;
       }
     }
-    if (state) {
-      return callback();
+    if (state && callback) {
+      callback();
     }
+    return state;
   };
   /*
   Helper functions

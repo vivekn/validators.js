@@ -66,7 +66,7 @@ class EmptyValidator extends LengthValidator
 
 class RegexValidator extends ValueValidator
     constructor: (cssClass = "regexErr", message, regex) ->
-        check = (val) -> val.match regex != null
+        check = (val) -> val.match(regex) != null
         super cssClass, message, check
         
 class EmailValidator extends RegexValidator
@@ -84,8 +84,10 @@ Validators = (mapping, callback) ->
         if not mapping[key].validate.apply(null,selectors)
             state = off
 
-    if state
+    if state and callback
         callback()
+
+    return state
 
 ###
 Helper functions
