@@ -13,7 +13,7 @@ Add a __script__ tag reference to validators.js after the reference to the jQuer
 
 Usage
 ----
-See examples at this [blog post]()
+See examples at this [blog post](http://v1v3kn.tumblr.com/post/8989495534/validators-js-javascript-based-form-validation-using)
 
 API Reference
 ====
